@@ -119,7 +119,7 @@ sudo dnf install copr-clean
 
 # 3. Run the scanner
 sudo copr-clean
-
+```
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
