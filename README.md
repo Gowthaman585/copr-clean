@@ -104,6 +104,22 @@ for reference.
   read the file path in the confirmation prompt carefully before
   answering `y`
 
+## Installation & Usage
+
+### Option 1: Install via Fedora COPR (Recommended)
+
+You can install `copr-clean` directly as a native package using DNF:
+
+```bash
+# 1. Enable the COPR repository
+sudo dnf copr enable gowt85/copr-clean
+
+# 2. Install copr-clean
+sudo dnf install copr-clean
+
+# 3. Run the scanner
+sudo copr-clean
+
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
@@ -114,4 +130,3 @@ Issues and pull requests are welcome. If you find a repo layout this
 script doesn't parse correctly (e.g. a COPR hub format it doesn't
 recognize), please open an issue with the `baseurl` in question (feel free
 to redact anything sensitive).
-miles@nobara:~/copr-clean$
