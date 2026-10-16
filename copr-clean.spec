@@ -1,6 +1,6 @@
 Name:           copr-clean
 Version:        1.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Scan and clean up broken COPR repositories
 
 License:        MIT
