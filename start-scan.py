@@ -131,7 +131,7 @@ def clean_broken_repos():
     # Step 3: Privilege Check before prompting for deletion
     if not is_root():
         print("\n[WARNING] Root privileges are required to remove repo files.")
-        print("Please re-run this command with 'sudo python3 sprint3.py' to perform cleanup.")
+        print("Please re-run this command with 'sudo python3 {sys.argv[0]}' to perform cleanup.")
         return
 
     # Step 4: Interactive deletion for fully broken files
