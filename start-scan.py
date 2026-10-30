@@ -69,7 +69,7 @@ def check_copr_status(owner, project):
                     data = json.loads(response.read().decode('utf-8'))
                 except json.JSONDecodeError:
                     return "INVALID_RESPONSE"
-                return "ACTIVE" if "id" in data or "name" in data else "BROKEN"
+                return "ACTIVE" if "id" in data or "name" in data else "INVALID_RESPONSE"
             return f"HTTP_{response.status}"
     except urllib.error.HTTPError as e:
         return "BROKEN" if e.code == 404 else f"HTTP_{e.code}"
@@ -99,7 +99,7 @@ def clean_broken_repos():
         elif status == "BROKEN":
             print(f"[   BROKEN   ] {owner}/{project} -> File: {filepath}")
         else:
-            print(f"[ {status:^13} ] {owner}/{project}")
+            print(f"[ {status:^16} ] {owner}/{project}")
 
     # Step 2: Categorize files safely
     # Fully broken files: EVERY entry inside the file has status == "BROKEN"
