@@ -19,7 +19,7 @@ longer exist upstream.
 %setup -q
 
 %build
-# nothing to build, it's a plain Python script
+# it's a plain Python script
 
 %install
 mkdir -p %{buildroot}%{_bindir}
@@ -31,5 +31,8 @@ install -m 0755 start-scan.py %{buildroot}%{_bindir}/copr-clean
 %doc README.md
 
 %changelog
+* Fri Oct 16 2026 Gowthaman M <gowthamanm585@gmail.com> - 1.0-2
+- Improved handling for unexpected responses from the copr api
+
 * Sat Sep 05 2026 Gowthaman M <gowthamanm585@gmail.com> - 1.0-1
 - Initial release
