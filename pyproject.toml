@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "copr-clean"
+version = "1.0.2"
+description = "Scan and clean up broken COPR repositories on Fedora systems"
+readme = "README.md"
+requires-python = ">=3.6"
+license = { text = "MIT" }
+authors = [
+    { name = "Gowthaman M", email = "gowthamanm585@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+
+[project.scripts]
+copr-clean = "copr_clean.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

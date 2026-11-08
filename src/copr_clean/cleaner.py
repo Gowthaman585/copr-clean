@@ -2,8 +2,8 @@ import os
 import sys
 from collections import defaultdict
 
-from parser import find_copr_repos
-from api import check_copr_status
+from copr_clean.parser import find_copr_repos
+from copr_clean.api import check_copr_status
 
 def is_root():
     """Check if the script is running with root/sudo privileges."""

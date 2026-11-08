@@ -1,0 +1,13 @@
+LICENSE
+README.md
+pyproject.toml
+src/copr_clean/__init__.py
+src/copr_clean/api.py
+src/copr_clean/cleaner.py
+src/copr_clean/cli.py
+src/copr_clean/parser.py
+src/copr_clean.egg-info/PKG-INFO
+src/copr_clean.egg-info/SOURCES.txt
+src/copr_clean.egg-info/dependency_links.txt
+src/copr_clean.egg-info/entry_points.txt
+src/copr_clean.egg-info/top_level.txt
