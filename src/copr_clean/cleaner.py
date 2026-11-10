@@ -5,6 +5,51 @@ from collections import defaultdict
 from copr_clean.parser import find_copr_repos
 from copr_clean.api import check_copr_status
 
+import subprocess
+
+def get_installed_copr_packages() -> dict:
+    """
+    Query the local RPM database to get all currently installed package names.
+    Uses `rpm -qa --qf '%{NAME}\n'` for fast, clean name extraction.
+    """
+    try:
+        result = subprocess.run(
+            ["rpm", "-qa", "--qf", "%{NAME}|%{VENDOR}\n"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        
+        installed_package_name_and_vendor = {}
+        
+        for line in result.stdout.splitlines():
+            if '|' in line:
+                name, vendor = line.split("|" ,1 )
+                if "copr" in vendor.lower():
+                    installed_package_name_and_vendor[name.strip()] = vendor.strip()
+
+        return installed_package_name_and_vendor
+
+    except subprocess.CalledProcessError as e:
+        print(f"[-] Warning: Failed to query local RPM database: {e}")
+        return {}
+
+
+
+
+def find_installed_copr_packages(copr_package_names: list) -> list:
+    """
+    Cross-reference a list of COPR package names against the local RPM database
+    to find which ones are currently installed on the user's system.
+    """
+    installed_copr_package = get_installed_copr_packages()
+    
+    # Filter the COPR list to only include packages present in the local RPM set
+    matched_packages = [pkg for pkg in copr_package_names if pkg in installed_copr_package]
+    return matched_packages
+
+
 def is_root():
     """Check if the script is running with root/sudo privileges."""
     return os.geteuid() == 0

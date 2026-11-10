@@ -32,4 +32,42 @@ def check_copr_status(owner, project):
     except (urllib.error.URLError, TimeoutError):
         return "NETWORK_ERROR"
 
+def get_copr_package_name(owner: str, project: str) -> list:
+
+    
+    """
+    Query the Fedora COPR v3 API to fetch all package names 
+    associated with a specific owner and project.
+    
+    Endpoint format:
+    https://copr.fedorainfracloud.org/api_3/package/get/list?ownername={owner}&projectname={project}
+    """
+    url = f"https://copr.fedorainfracloud.org/api_3/package/list?ownername={owner}&projectname={project}"
+
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "copr-clean/1.0.2 (Python utility)"}
+    )
+    
+
+
+    try:
+        with urllib.request.urlopen(req, timeout=5) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode("utf-8"))
+                # COPR API returns packages under the 'items' key
+                packages = data.get("items", [])
+                # Extract just the package names from the dictionary objects
+
+                # !!! <DEBUG> may be other then extracting name something can useful from the packages above
+                # for i in packages:
+                #    print(f"====={i}=====1")
+                # !!! <end>
+
+                return [pkg.get("name") for pkg in packages if "name" in pkg]
+    except Exception as e:
+        # Gracefully handle network errors or missing projects during check
+        print(f"[-] Warning: Could not fetch package manifest for {owner}/{project}: {e}")
+        
+    return []
 
