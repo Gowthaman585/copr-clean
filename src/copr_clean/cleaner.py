@@ -9,27 +9,26 @@ import subprocess
 
 def get_installed_copr_packages() -> dict:
     """
-    Query the local RPM database to get all currently installed package names.
-    Uses `rpm -qa --qf '%{NAME}\n'` for fast, clean name extraction.
+    Query the local dnf database to get all currently installed package names.
     """
     try:
         result = subprocess.run(
-            ["rpm", "-qa", "--qf", "%{NAME}|%{VENDOR}\n"],
+            ["dnf", "repoquery", "--installed", "--qf", "%{name}|%{from_repo}\n"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             check=True
         )
         
-        installed_package_name_and_vendor = {}
+        installed_package_name_and_repo = {}
         
         for line in result.stdout.splitlines():
             if '|' in line:
-                name, vendor = line.split("|" ,1 )
-                if "copr" in vendor.lower():
-                    installed_package_name_and_vendor[name.strip()] = vendor.strip()
+                name, repo = line.split("|" ,1 )
+                if "copr:" in repo.lower():
+                    installed_package_name_and_repo[name.strip()] = repo.strip()
 
-        return installed_package_name_and_vendor
+        return installed_package_name_and_repo
 
     except subprocess.CalledProcessError as e:
         print(f"[-] Warning: Failed to query local RPM database: {e}")
