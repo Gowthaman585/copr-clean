@@ -32,6 +32,16 @@ def check_copr_status(owner, project):
     except (urllib.error.URLError, TimeoutError):
         return "NETWORK_ERROR"
 
+
+
+"""
+For now this methos used nowhere in this project
+but leaving this as it is.
+this may usefule at some point of time to specifically search copr repo for more details with copr-api
+
+for now this method is tested to fetch all package names that the repo containes
+"""
+
 def get_copr_package_name(owner: str, project: str) -> list:
 
     

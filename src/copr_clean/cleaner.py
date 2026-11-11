@@ -1,5 +1,4 @@
 import os
-import sys
 from collections import defaultdict
 
 from copr_clean.parser import find_copr_repos
@@ -7,9 +6,11 @@ from copr_clean.api import check_copr_status
 
 import subprocess
 
-def get_installed_copr_packages() -> dict:
+
+
+def setup_copr_package_names() -> dict:
     """
-    Query the local dnf database to get all currently installed package names.
+    Query the local dnf database to get all currently installed copr package names.
     """
     try:
         result = subprocess.run(
@@ -20,33 +21,19 @@ def get_installed_copr_packages() -> dict:
             check=True
         )
         
-        installed_package_name_and_repo = {}
+        copr_packages_ProjectOwner_name = defaultdict(set)
         
         for line in result.stdout.splitlines():
             if '|' in line:
                 name, repo = line.split("|" ,1 )
-                if "copr:" in repo.lower():
-                    installed_package_name_and_repo[name.strip()] = repo.strip()
-
-        return installed_package_name_and_repo
+                parts = repo.strip().split(":")
+                if(len(parts)>=4 and parts[0].lstrip("@") == "copr"):
+                    copr_packages_ProjectOwner_name[parts[-1],parts[-2]].add(name.strip())
+        return copr_packages_ProjectOwner_name
 
     except subprocess.CalledProcessError as e:
-        print(f"[-] Warning: Failed to query local RPM database: {e}")
+        print(f"[ERROR] Failed to query local RPM database: {e}")
         return {}
-
-
-
-
-def find_installed_copr_packages(copr_package_names: list) -> list:
-    """
-    Cross-reference a list of COPR package names against the local RPM database
-    to find which ones are currently installed on the user's system.
-    """
-    installed_copr_package = get_installed_copr_packages()
-    
-    # Filter the COPR list to only include packages present in the local RPM set
-    matched_packages = [pkg for pkg in copr_package_names if pkg in installed_copr_package]
-    return matched_packages
 
 
 def is_root():
@@ -54,9 +41,15 @@ def is_root():
     return os.geteuid() == 0
 
 
+
+
 def clean_broken_repos():
+    
     """Validates repos and offers interactive removal for fully broken repo files."""
+
+    # collect all the availabe copr repos in /etc/yum*
     results = list(find_copr_repos())
+    
     if not results:
         print("No COPR repository files found in /etc/yum.repos.d/")
         return
@@ -68,13 +61,13 @@ def clean_broken_repos():
     file_statuses = defaultdict(list)
 
     for filepath, owner, project in results:
-        status = check_copr_status(owner, project)
+        status = check_copr_status(owner,project)
         file_statuses[filepath].append((owner, project, status))
 
         if status == "ACTIVE":
-            print(f"[   ACTIVE   ] {owner}/{project}")
+            print(f"[ACTIVE] {owner}/{project}")
         elif status == "BROKEN":
-            print(f"[   BROKEN   ] {owner}/{project} -> File: {filepath}")
+            print(f"[BROKEN] {owner}/{project} -> File: {filepath}")
         else:
             print(f"[ {status:^16} ] {owner}/{project}")
 
@@ -111,15 +104,44 @@ def clean_broken_repos():
         print("Please re-run this command with 'sudo copr-clean' to perform cleanup.")
         return
 
+    # collect all the copr packages downloaded in the system
+    copr_packages_details = setup_copr_package_names()
+    
+    
     # Step 4: Interactive deletion for fully broken files
+    
+    # get the filepath that their package can't be removed for some reasons 
+    failed_filepath_package_removal = set()
+    # this one is for the package that user did not want to uninstall so collect that particular repo filepath not to touch them
+    cancelled_filepath_package_removal = set()
+
     for filepath in broken_files:
-        confirm = input(f"Delete broken repo file '{filepath}'? [y/N]: ").strip().lower()
-        if confirm == 'y':
-            try:
-                os.remove(filepath)
-                print(f"[DELETED] {filepath}")
-            except OSError as e:
-                print(f"[ERROR] Failed to delete {filepath}: {e}")
-        else:
-            print(f"[SKIPPED] {filepath}")
+        entries = file_statuses[filepath]
+        for owner, project, status in entries:
+            matched_package_name = copr_packages_details.get((project,owner),set())
+            if matched_package_name:
+                for pkg in matched_package_name:
+                    confirm = input(f"Delete installed package '{pkg}'? [y/N]: ").strip().lower()
+                    if confirm == 'y':
+                        try:
+                            subprocess.run(["dnf","remove",pkg] , check=True)
+                            print("[SUCCESS] Package removed.")
+                        except subprocess.CalledProcessError as e:
+                            failed_filepath_package_removal.add(filepath)
+                            print(f"[ERROR] Failed to remove the package {pkg}: {e}")
+                    else:
+                        cancelled_filepath_package_removal.add(filepath)
+                        print(f"[SKIPPED] leaving the package '{pkg}' as installed")
+
+
+        if filepath not in cancelled_filepath_package_removal and filepath not in failed_filepath_package_removal:
+            confirm = input(f"Delete broken repo file '{filepath}'? [y/N]: ").strip().lower()
+            if confirm == 'y':
+                try:
+                    os.remove(filepath)
+                    print(f"[SUCCESS] repofile removed {filepath}")
+                except OSError as e:
+                    print(f"[ERROR] Failed to delete {filepath}: {e}")
+            else:
+                print(f"[SKIPPED] repofile {filepath}")
 
